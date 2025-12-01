@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>City Online</title>
+  <style>
+    body { font-family: Arial; background: #20232a; color: #fff; text-align: center; }
+    input { margin: 5px; padding: 10px; border: none; border-radius: 5px; }
+    button { padding: 10px 20px; border: none; border-radius: 5px; background: #61dafb; cursor: pointer; }
+    #adminPanel { display: none; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>City Online</h1>
+  <div id="auth">
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Hasło"><br>
+    <button id="registerBtn">Zarejestruj</button>
+    <button id="loginBtn">Zaloguj</button>
+  </div>
+
+  <div id="adminPanel">
+    <h2>Panel Administratora</h2>
+    <button onclick="alert('Event rozpoczęty!')">Start event</button>
+    <button onclick="alert('Dodano 1000$ wszystkim graczom!')">Dodaj kasę</button>
+    <button onclick="alert('Gracz zbanowany!')">Banuj gracza</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDIF2-XugC47uS-H2141b6LvAiUpLeSBNE",
+  authDomain: "gra-online-miasto.firebaseapp.com",
+  projectId: "gra-online-miasto",
+  storageBucket: "gra-online-miasto.firebasestorage.app",
+  messagingSenderId: "292192881667",
+  appId: "1:292192881667:web:e7c0ba895d040d9a7b1236",
+  measurementId: "G-GRPLRZF60Y"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);    const firebaseConfig = {
+      apiKey: "TWOJ_API_KEY",
+      authDomain: "twoj-projekt.firebaseapp.com",
+      projectId: "twoj-projekt",
+      storageBucket: "twoj-projekt.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abc123"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    const adminEmail = "jasiukruczek13@gmail.com"; // ← tu wpisz swój email admina
+
+    document.getElementById("registerBtn").onclick = async () => {
+      const email = emailInput.value;
+      const password = passwordInput.value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert("Zarejestrowano!");
+      } catch (err) {
+        alert("Błąd: " + err.message);
+      }
+    };
+
+    document.getElementById("loginBtn").onclick = async () => {
+      const email = emailInput.value;
+      const password = passwordInput.value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        alert("Zalogowano!");
+        if (email === adminEmail) {
+          document.getElementById("adminPanel").style.display = "block";
+        }
+      } catch (err) {
+        alert("Błąd logowania: " + err.message);
+      }
+    };
+  </script>
+</body>
+</html>
