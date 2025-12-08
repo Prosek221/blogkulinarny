@@ -1,9 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Schoolbell&family=Walter+Turncoat&display=swap');
+
 body{
-  font-family:Comic Sans MS;
+    font-family: "Comic Sans MS"
 }
 
 button{
-  background-image: linear-gradient(to right, #006666 , yellow);
+  background-image: linear-gradient(to right, #159957 , #155799);
+  border: 0px;
 
+  
+}
+
+
+#przyciski{
+  
+  color:black;
+  text-decoration: none;
+  text-align: center;
+}
+
+#item{
+  background-image: linear-gradient(to right, #159957 , #155799);
+  display:inline;
+  text-decoration: none;
+  margin-right: 10%;
+  padding:10px;
+  border-radius:10px;
+}
+
+
+#zeberka{
+  background-image: linear-gradient(to right, #ED0202 , #FFE500);
+  display:inline;
+  text-decoration: none;
+
+  padding:10px;
+  border-radius:10px;
+  margin-left: 20%;
+  
+}
+
+
+h1{
+  
+  margin: 30px;
+  
+}
+
+#srodek{
+  text-align: center;
 }
 
