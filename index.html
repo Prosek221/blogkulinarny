@@ -1,0 +1,135 @@
+diff --git a/index.html b/index.html
+index 53284fcd1ca3f06a1822688d243cf9976ccbb932..1eafb7eaf86084662ae326759d379fb0ef7a2e76 100644
+--- a/index.html
++++ b/index.html
+@@ -1,32 +1,97 @@
+-<!DOCTYPE html>
+-<html lang="pl">
+-  <head>
+-    <meta charset="utf-8" />
+-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+-
+-    <title>Hello World!</title>
+-    <link rel="stylesheet" href="style.css" />
+-    <script src="script.js" defer></script>
+-  </head>
+-
+-  <body>
+-    
+-    <img src="https://img.icons8.com/?size=100&id=xX2QEbQBBIJc&format=png&color=000000"/>
+-    <h1 id="srodek">Blog Kulinarny </h1>
+-    <hr>
+-    <p id="srodek">Proste i Niezawodne Przpeisy Kulinarne! </p>
+-    <hr>
+-    <ul>
+-      <li id="item"><a href="index.html" id="przyciski">Strona Główna<a/></li>
+-      <li id="item"><a href="dania.html" id="przyciski">Dania Mięsne<a/></li>
+-      <li id="item"><a href="#" id="przyciski">Zupy<a/></li>
+-      <li id="item"><a href="#" id="przyciski">Desery<a/></li>
+-    </ul>
+- 
+-    <hr>
+-    <h3>O Blogu?</h3>
+-    <p>Witaj na moim blogu kulinarnym!!</p>
+-    <p>Tutaj znajdziesz sprawdzone przepisy kulinarne.</p>
+-  </body>
+-  
+-</html>
+\ No newline at end of file
++<!DOCTYPE html>
++<html lang="pl">
++  <head>
++    <meta charset="utf-8" />
++    <meta name="viewport" content="width=device-width, initial-scale=1" />
++    <title>Imperium Frontowe</title>
++    <link rel="stylesheet" href="style.css" />
++    <script src="script.js" defer></script>
++  </head>
++  <body>
++    <header class="topbar">
++      <div>
++        <h1>Imperium Frontowe</h1>
++        <p>Buduj państwo, rozwijaj wojsko i odpieraj boty.</p>
++      </div>
++      <div class="account">
++        <label for="profileName">Profil</label>
++        <input id="profileName" type="text" placeholder="nazwa konta" />
++        <button id="saveProfile">Zapisz postęp</button>
++        <button id="loadProfile">Wczytaj</button>
++      </div>
++    </header>
++
++    <main class="layout">
++      <aside class="sidebar">
++        <section>
++          <h2>Twoje miasta</h2>
++          <div id="cityList" class="city-list"></div>
++          <button id="addCity">Załóż nowe miasto</button>
++        </section>
++
++        <section>
++          <h2>Panel miasta</h2>
++          <div id="cityStatus" class="panel"></div>
++          <button id="sendPatrol">Wyślij patrol</button>
++        </section>
++
++        <section>
++          <h2>Budynki</h2>
++          <div id="buildingShop" class="shop"></div>
++        </section>
++
++        <section>
++          <h2>Jednostki</h2>
++          <div id="unitShop" class="shop"></div>
++        </section>
++      </aside>
++
++      <section class="map-area">
++        <div class="map-header">
++          <div>
++            <h2>Mapa strategiczna</h2>
++            <p>Wybieraj miasta, rozwijaj infrastrukturę i reaguj na zagrożenia.</p>
++          </div>
++          <div class="resources">
++            <div>Budżet: <span id="budget">0</span> kredytów</div>
++            <div>Utrzymanie: <span id="maintenance">0</span> / dzień</div>
++            <div>Status: <span id="gameStatus">Stabilny</span></div>
++          </div>
++        </div>
++
++        <div class="map-grid">
++          <div id="map" class="map"></div>
++          <aside class="right-panel">
++            <h3>Radar wykryć</h3>
++            <div class="radar">
++              <div class="radar-sweep"></div>
++              <div id="radarDots" class="radar-dots"></div>
++            </div>
++            <div id="radarLog" class="panel"></div>
++            <div id="radarActions" class="panel"></div>
++
++            <h3>Mini-mapa</h3>
++            <div id="minimap" class="minimap"></div>
++
++            <h3>Aktywne patrole</h3>
++            <div id="patrolList" class="panel"></div>
++          </aside>
++        </div>
++
++        <section class="log-section">
++          <h2>Dziennik wydarzeń</h2>
++          <div id="eventLog" class="event-log"></div>
++        </section>
++
++        <section class="log-section">
++          <h2>Operacje ofensywne</h2>
++          <div id="enemyCityList" class="panel"></div>
++          <div class="attack-meta">
++            <span>Cooldown: <strong id="attackCooldown">gotowy</strong></span>
++            <button id="attackCity">Zaatakuj wybrane miasto</button>
++          </div>
++        </section>
++      </section>
++    </main>
++  </body>
++</html>
