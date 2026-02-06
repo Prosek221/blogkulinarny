@@ -37,21 +37,21 @@ const tankTypes = [
 ];
 
 const shipTypes = [
-  { name: "Niszczyciel rakietowy", cost: 1200, maintenance: 18, attack: 11, type: "ship" },
-  { name: "Fregata stealth", cost: 1000, maintenance: 16, attack: 9, type: "ship" },
-  { name: "Korweta patrolowa", cost: 800, maintenance: 12, attack: 7, type: "ship" },
-  { name: "Okręt desantowy", cost: 900, maintenance: 14, attack: 8, type: "ship" },
-  { name: "Lotniskowiec", cost: 1800, maintenance: 24, attack: 14, type: "ship" },
-  { name: "Okręt podwodny typu Virginia", cost: 1500, maintenance: 20, attack: 13, type: "sub" },
-  { name: "Okręt podwodny typu Astute", cost: 1400, maintenance: 19, attack: 12, type: "sub" },
-  { name: "Okręt podwodny Scorpene", cost: 1200, maintenance: 17, attack: 10, type: "sub" },
-  { name: "Szybki kuter rakietowy", cost: 700, maintenance: 10, attack: 6, type: "ship" },
-  { name: "Zwiadowczy okręt SIGINT", cost: 650, maintenance: 9, attack: 4, type: "ship" }
+  { name: "Niszczyciel rakietowy", cost: 1200, maintenance: 18, attack: 11 },
+  { name: "Fregata stealth", cost: 1000, maintenance: 16, attack: 9 },
+  { name: "Korweta patrolowa", cost: 800, maintenance: 12, attack: 7 },
+  { name: "Okręt desantowy", cost: 900, maintenance: 14, attack: 8 },
+  { name: "Lotniskowiec", cost: 1800, maintenance: 24, attack: 14 },
+  { name: "Okręt podwodny typu Virginia", cost: 1500, maintenance: 20, attack: 13 },
+  { name: "Okręt podwodny typu Astute", cost: 1400, maintenance: 19, attack: 12 },
+  { name: "Okręt podwodny Scorpene", cost: 1200, maintenance: 17, attack: 10 },
+  { name: "Szybki kuter rakietowy", cost: 700, maintenance: 10, attack: 6 },
+  { name: "Zwiadowczy okręt SIGINT", cost: 650, maintenance: 9, attack: 4 }
 ];
 
 const buildingCatalog = [
   { id: "airport", name: "Lotnisko wojskowe", cost: 1200, description: "Pozwala na zakup samolotów." },
-  { id: "hangar", name: "Hangar", cost: 800, description: "Wymagany dla utrzymania floty." },
+  { id: "hangar", name: "Hangar", cost: 800, description: "Wymagany dla utrzymania floty powietrznej." },
   { id: "port", name: "Port wojskowy", cost: 1100, description: "Wymagany dla statków i okrętów." },
   { id: "radar", name: "Radar boczny (poziom +1)", cost: 600, description: "Zwiększa wykrywanie celów (F-35 po poziomie 2)." },
   { id: "walls", name: "Mury obronne", cost: 500, description: "Zwiększa odporność miasta." },
@@ -95,7 +95,8 @@ const ui = {
   loadProfile: document.getElementById("loadProfile"),
   enemyCityList: document.getElementById("enemyCityList"),
   attackCooldown: document.getElementById("attackCooldown"),
-  attackCity: document.getElementById("attackCity")
+  attackCity: document.getElementById("attackCity"),
+  sendPatrol: document.getElementById("sendPatrol")
 };
 
 const randomFrom = (list) => list[Math.floor(Math.random() * list.length)];
@@ -134,13 +135,12 @@ const createEnemyCity = (name) => ({
 const getActiveCity = () => state.cities.find((city) => city.id === state.activeCityId);
 const getSelectedEnemy = () => state.enemiesDetected.find((enemy) => enemy.id === state.selectedEnemyId);
 const getSelectedEnemyCity = () => state.enemyCities.find((city) => city.id === state.selectedEnemyCityId);
-
 const getReadyAircraft = (city) => city.units.aircraft.filter((unit) => unit.status === "gotowy");
 
 const logEvent = (message) => {
   const timestamp = new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
   state.events.unshift(`[${timestamp}] ${message}`);
-  state.events = state.events.slice(0, 12);
+  state.events = state.events.slice(0, 14);
   renderLog();
 };
 
@@ -192,19 +192,19 @@ const renderShops = () => {
 
   ui.buildingShop.innerHTML = "";
   buildingCatalog.forEach((building) => {
+    const card = document.createElement("div");
+    card.className = "shop-card";
     const button = document.createElement("button");
     button.textContent = `${building.name} (${building.cost})`;
     button.disabled = building.id !== "radar" && city.buildings[building.id];
     button.addEventListener("click", () => purchaseBuilding(building));
-    const card = document.createElement("div");
-    card.className = "shop-card";
     card.innerHTML = `<strong>${building.name}</strong><p>${building.description}</p>`;
     card.appendChild(button);
     ui.buildingShop.appendChild(card);
   });
 
   ui.unitShop.innerHTML = "";
-  const section = (title) => {
+  const addSection = (title) => {
     const wrapper = document.createElement("div");
     wrapper.className = "shop-section";
     wrapper.innerHTML = `<h4>${title}</h4>`;
@@ -212,13 +212,13 @@ const renderShops = () => {
     return wrapper;
   };
 
-  const aircraftSection = section("Samoloty");
+  const aircraftSection = addSection("Samoloty");
   aircraftTypes.forEach((unit) => addUnitButton(aircraftSection, "aircraft", unit));
 
-  const tankSection = section("Czołgi");
+  const tankSection = addSection("Czołgi");
   tankTypes.forEach((unit) => addUnitButton(tankSection, "tanks", unit));
 
-  const shipSection = section("Statki i okręty");
+  const shipSection = addSection("Statki i okręty");
   shipTypes.forEach((unit) => addUnitButton(shipSection, "ships", unit));
 };
 
@@ -228,7 +228,6 @@ const addUnitButton = (container, type, unit) => {
   const button = document.createElement("button");
   button.textContent = `Kup (${unit.cost})`;
   button.addEventListener("click", () => purchaseUnit(type, unit));
-
   card.innerHTML = `<strong>${unit.name}</strong>
     <p>Atak: ${unit.attack} | Utrzymanie: ${unit.maintenance}</p>`;
   card.appendChild(button);
@@ -386,14 +385,12 @@ const purchaseBuilding = (building) => {
     logEvent("Brak środków na budynek.");
     return;
   }
-
   state.budget -= building.cost;
   if (building.id === "radar") {
     city.buildings.radar += 1;
   } else {
     city.buildings[building.id] = true;
   }
-
   logEvent(`W mieście ${city.name} zbudowano: ${building.name}.`);
   render();
 };
@@ -405,7 +402,6 @@ const purchaseUnit = (type, unit) => {
     logEvent("Brak środków na jednostkę.");
     return;
   }
-
   if (type === "aircraft" && (!city.buildings.airport || !city.buildings.hangar)) {
     logEvent("Potrzebujesz lotniska i hangaru.");
     return;
@@ -414,7 +410,6 @@ const purchaseUnit = (type, unit) => {
     logEvent("Potrzebujesz portu wojskowego.");
     return;
   }
-
   state.budget -= unit.cost;
   city.units[type].push({ ...unit, id: crypto.randomUUID(), status: "gotowy" });
   logEvent(`Zakupiono ${unit.name} w mieście ${city.name}.`);
@@ -493,7 +488,8 @@ const fireMissiles = (enemyId) => {
     mission.eta = 5;
   } else {
     logEvent(`Atak rakietowy nieudany. ${mission.unitName} utracony.`);
-    removeAircraft(city, mission.unitId);
+    const homeCity = state.cities.find((item) => item.id === mission.cityId);
+    if (homeCity) removeAircraft(homeCity, mission.unitId);
     state.missions = state.missions.filter((item) => item.id !== mission.id);
   }
   render();
@@ -604,8 +600,7 @@ const enemyAttack = () => {
   const enemyUnit =
     attackType === "air" ? randomFrom(aircraftTypes) : attackType === "land" ? randomFrom(tankTypes) : randomFrom(shipTypes);
 
-  const detected =
-    attackType !== "air" || !enemyUnit.stealth || targetCity.buildings.radar >= 2;
+  const detected = attackType !== "air" || !enemyUnit.stealth || targetCity.buildings.radar >= 2;
 
   if (detected) {
     state.enemiesDetected.unshift({
@@ -649,6 +644,9 @@ const enemyAttack = () => {
 
 const setupControls = () => {
   ui.addCity.addEventListener("click", addCity);
+  ui.sendPatrol.addEventListener("click", startPatrol);
+  ui.attackCity.addEventListener("click", attackEnemyCity);
+
   ui.saveProfile.addEventListener("click", () => {
     const name = ui.profileName.value.trim();
     if (!name) {
@@ -658,6 +656,7 @@ const setupControls = () => {
     localStorage.setItem(`${PROFILE_KEY}-${name}`, JSON.stringify(state));
     logEvent("Postęp zapisany.");
   });
+
   ui.loadProfile.addEventListener("click", () => {
     const name = ui.profileName.value.trim();
     if (!name) {
@@ -682,13 +681,6 @@ const setupControls = () => {
     render();
     logEvent("Profil wczytany.");
   });
-
-  const patrolButton = document.createElement("button");
-  patrolButton.textContent = "Wyślij patrol";
-  patrolButton.addEventListener("click", startPatrol);
-  ui.cityStatus.after(patrolButton);
-
-  ui.attackCity.addEventListener("click", attackEnemyCity);
 };
 
 const init = () => {
