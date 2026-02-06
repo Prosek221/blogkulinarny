@@ -1,24 +1,15 @@
-diff --git a/style.css b/style.css
 index 825fe76af2c6c2db92030535070772e45f85772b..b086ed45b5976a4dafd45eb6b293a41d6b92eb4a 100644
 --- a/style.css
-+++ b/style.css
-@@ -1,53 +1,421 @@
 -@import url('https://fonts.googleapis.com/css2?family=Schoolbell&family=Walter+Turncoat&display=swap');
 +:root {
 +  color-scheme: dark;
 +  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-+  background-color: #0a0f14;
-+  color: #eef2f6;
-+  --accent: #27d190;
 +  --accent-strong: #1fb07a;
 +  --panel: rgba(16, 24, 32, 0.92);
 +  --panel-border: rgba(255, 255, 255, 0.08);
-+  --muted: #9fb0c0;
-+  --glow: 0 0 20px rgba(39, 209, 144, 0.2);
 +}
  
 -body{
--    font-family: "Comic Sans MS"
 +* {
 +  box-sizing: border-box;
  }
@@ -54,23 +45,12 @@ index 825fe76af2c6c2db92030535070772e45f85772b..b086ed45b5976a4dafd45eb6b293a41d
 +  letter-spacing: 0.5px;
 +}
  
--#przyciski{
--  
--  color:black;
--  text-decoration: none;
--  text-align: center;
 +.topbar p {
 +  margin: 0;
 +  color: var(--muted);
  }
  
--#item{
--  background-image: linear-gradient(to right, #159957 , #155799);
--  display:inline;
--  text-decoration: none;
--  margin-right: 10%;
--  padding:10px;
--  border-radius:10px;
+
 +.account {
 +  display: flex;
 +  align-items: center;
@@ -89,10 +69,7 @@ index 825fe76af2c6c2db92030535070772e45f85772b..b086ed45b5976a4dafd45eb6b293a41d
 +  color: #fff;
 +}
  
--#zeberka{
--  background-image: linear-gradient(to right, #ED0202 , #FFE500);
--  display:inline;
--  text-decoration: none;
+
 +button {
 +  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
 +  color: #05261b;
@@ -104,11 +81,7 @@ index 825fe76af2c6c2db92030535070772e45f85772b..b086ed45b5976a4dafd45eb6b293a41d
 +  box-shadow: 0 8px 16px rgba(39, 209, 144, 0.2);
 +  transition: transform 0.2s ease, box-shadow 0.2s ease;
 +}
- 
--  padding:10px;
--  border-radius:10px;
--  margin-left: 20%;
--  
+
 +button:hover {
 +  transform: translateY(-1px);
 +  box-shadow: 0 12px 20px rgba(39, 209, 144, 0.3);
@@ -120,18 +93,14 @@ index 825fe76af2c6c2db92030535070772e45f85772b..b086ed45b5976a4dafd45eb6b293a41d
 +  box-shadow: none;
 +}
  
--h1{
--  
--  margin: 30px;
--  
+
 +.layout {
 +  display: grid;
 +  grid-template-columns: 340px 1fr;
 +  min-height: calc(100vh - 90px);
  }
  
--#srodek{
--  text-align: center;
+
 +.sidebar {
 +  padding: 24px;
 +  border-right: 1px solid var(--panel-border);
