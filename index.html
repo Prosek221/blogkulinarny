@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Imperium Frontowe</title>
-    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="style.css?v=2" />
     <script src="script.js" defer></script>
   </head>
   <body>
@@ -47,6 +47,12 @@
           <h2>Jednostki</h2>
           <div id="unitShop" class="shop"></div>
         </section>
+
+        <section>
+          <h2>Skład uzbrojenia</h2>
+          <div id="missileShop" class="shop"></div>
+          <div id="missileStock" class="panel"></div>
+        </section>
       </aside>
 
       <section class="map-area">
@@ -75,13 +81,24 @@
             <div id="radarLog" class="panel"></div>
             <div id="radarActions" class="panel"></div>
 
-            <h3>Mini-mapa</h3>
+            <h3>Mini-mapa taktyczna</h3>
             <div id="minimap" class="minimap"></div>
 
             <h3>Aktywne patrole</h3>
             <div id="patrolList" class="panel"></div>
           </aside>
         </div>
+
+        <section class="log-section two-cols">
+          <div>
+            <h2>Twoje pojazdy</h2>
+            <div id="vehicleList" class="panel"></div>
+          </div>
+          <div>
+            <h2>Panel samolotu</h2>
+            <div id="aircraftPanel" class="panel"></div>
+          </div>
+        </section>
 
         <section class="log-section">
           <h2>Dziennik wydarzeń</h2>
