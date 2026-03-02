@@ -93,6 +93,11 @@ button:disabled {
   border: 1px solid #1f2a33;
 }
 
+.city-actions {
+  display: grid;
+  gap: 8px;
+}
+
 .city-units {
   display: flex;
   gap: 12px;
@@ -248,6 +253,11 @@ button:disabled {
   border-radius: 50%;
   background: #1d8f64;
   box-shadow: 0 0 6px rgba(29, 143, 100, 0.8);
+}
+
+.minimap-pin.enemy {
+  background: #ff6b6b;
+  box-shadow: 0 0 6px rgba(255, 107, 107, 0.8);
 }
 
 .event-log {
