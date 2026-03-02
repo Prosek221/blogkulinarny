@@ -1,4 +1,11 @@
 const PROFILE_KEY = "imperium-frontowe-profile";
+const TAX_RATE = 0.4;
+
+const missileTypes = [
+  { id: "a2a", name: "AAM-120 (pow.-pow.)", cost: 260, power: 7, use: "air" },
+  { id: "a2g", name: "AGM-88 (pow.-ziemia)", cost: 300, power: 8, use: "land" },
+  { id: "a2s", name: "AGM-84 (pow.-woda)", cost: 320, power: 8, use: "sea" }
+];
 
 const aircraftTypes = [
   { name: "F-16 Fighting Falcon", cost: 900, maintenance: 12, attack: 8, stealth: false },
@@ -15,12 +22,7 @@ const aircraftTypes = [
   { name: "B-21 Raider", cost: 2300, maintenance: 28, attack: 16, stealth: true },
   { name: "A-10 Thunderbolt II", cost: 850, maintenance: 10, attack: 7, stealth: false },
   { name: "AC-130 Ghostrider", cost: 1400, maintenance: 18, attack: 12, stealth: false },
-  { name: "MQ-9 Reaper", cost: 700, maintenance: 8, attack: 6, stealth: false },
-  { name: "KC-46 Pegasus", cost: 650, maintenance: 7, attack: 3, stealth: false },
-  { name: "E-3 Sentry", cost: 720, maintenance: 8, attack: 4, stealth: false },
-  { name: "P-8 Poseidon", cost: 880, maintenance: 9, attack: 6, stealth: false },
-  { name: "F-22 Raptor", cost: 1900, maintenance: 24, attack: 14, stealth: true },
-  { name: "Tempest", cost: 2000, maintenance: 25, attack: 15, stealth: true }
+  { name: "F-22 Raptor", cost: 1900, maintenance: 24, attack: 14, stealth: true }
 ];
 
 const tankTypes = [
@@ -37,668 +39,470 @@ const tankTypes = [
 ];
 
 const shipTypes = [
-  { name: "Niszczyciel rakietowy", cost: 1200, maintenance: 18, attack: 11 },
-  { name: "Fregata stealth", cost: 1000, maintenance: 16, attack: 9 },
-  { name: "Korweta patrolowa", cost: 800, maintenance: 12, attack: 7 },
-  { name: "Okręt desantowy", cost: 900, maintenance: 14, attack: 8 },
-  { name: "Lotniskowiec", cost: 1800, maintenance: 24, attack: 14 },
-  { name: "Okręt podwodny typu Virginia", cost: 1500, maintenance: 20, attack: 13 },
-  { name: "Okręt podwodny typu Astute", cost: 1400, maintenance: 19, attack: 12 },
-  { name: "Okręt podwodny Scorpene", cost: 1200, maintenance: 17, attack: 10 },
-  { name: "Szybki kuter rakietowy", cost: 700, maintenance: 10, attack: 6 },
-  { name: "Zwiadowczy okręt SIGINT", cost: 650, maintenance: 9, attack: 4 }
+  { name: "Niszczyciel rakietowy", cost: 1200, maintenance: 18, attack: 11, stealth: false },
+  { name: "Fregata stealth", cost: 1000, maintenance: 16, attack: 9, stealth: true },
+  { name: "Korweta patrolowa", cost: 800, maintenance: 12, attack: 7, stealth: false },
+  { name: "Okręt desantowy", cost: 900, maintenance: 14, attack: 8, stealth: false },
+  { name: "Lotniskowiec", cost: 1800, maintenance: 24, attack: 14, stealth: false },
+  { name: "Okręt podwodny typu Virginia", cost: 1500, maintenance: 20, attack: 13, stealth: true },
+  { name: "Okręt podwodny typu Astute", cost: 1400, maintenance: 19, attack: 12, stealth: true },
+  { name: "Okręt podwodny Scorpene", cost: 1200, maintenance: 17, attack: 10, stealth: true },
+  { name: "Szybki kuter rakietowy", cost: 700, maintenance: 10, attack: 6, stealth: false },
+  { name: "Zwiadowczy okręt SIGINT", cost: 650, maintenance: 9, attack: 4, stealth: false }
 ];
 
 const buildingCatalog = [
   { id: "airport", name: "Lotnisko wojskowe", cost: 1200, description: "Pozwala na zakup samolotów." },
-  { id: "hangar", name: "Hangar", cost: 800, description: "Wymagany dla utrzymania floty powietrznej." },
+  { id: "hangar", name: "Rozbuduj hangary", cost: 850, description: "+4 miejsca dla samolotów." },
   { id: "port", name: "Port wojskowy", cost: 1100, description: "Wymagany dla statków i okrętów." },
-  { id: "radar", name: "Radar boczny (poziom +1)", cost: 600, description: "Zwiększa wykrywanie celów (F-35 po poziomie 2)." },
-  { id: "walls", name: "Mury obronne", cost: 500, description: "Zwiększa odporność miasta." },
-  { id: "missiles", name: "Bateria rakiet", cost: 900, description: "Silna obrona przeciwko atakom z powietrza." },
-  { id: "antiAir", name: "System przeciwlotniczy", cost: 700, description: "Zwiększa szansę zestrzelenia wrogich samolotów." }
+  { id: "radar", name: "Radar naziemny", cost: 600, description: "Lepsze wykrywanie celów." },
+  { id: "mobileRadar", name: "Auto-radar", cost: 900, description: "Daje wykrycia poza głównym zasięgiem." },
+  { id: "omegaRadar", name: "Radar OMEGA", cost: 2200, description: "Wykrywa nawet cele stealth." },
+  { id: "missileSilo", name: "Silos rakietowy", cost: 1600, description: "Odblokowuje przechwytywanie rakiet." },
+  { id: "antiAir", name: "System przeciwlotniczy", cost: 700, description: "Większa obrona przeciw lotnictwu." },
+  { id: "walls", name: "Mury obronne", cost: 500, description: "Wzmacniają obronę lądową." }
 ];
 
-const state = {
-  budget: 20000,
-  maintenance: 0,
-  cities: [],
-  activeCityId: null,
-  patrols: [],
-  events: [],
-  enemiesDetected: [],
-  missions: [],
-  selectedEnemyId: null,
-  selectedEnemyCityId: null,
-  enemyCities: [],
-  attackCooldown: 0
-};
-
 const ui = {
-  cityList: document.getElementById("cityList"),
-  cityStatus: document.getElementById("cityStatus"),
-  buildingShop: document.getElementById("buildingShop"),
-  unitShop: document.getElementById("unitShop"),
-  budget: document.getElementById("budget"),
-  maintenance: document.getElementById("maintenance"),
-  gameStatus: document.getElementById("gameStatus"),
-  map: document.getElementById("map"),
-  minimap: document.getElementById("minimap"),
-  eventLog: document.getElementById("eventLog"),
-  radarLog: document.getElementById("radarLog"),
-  radarActions: document.getElementById("radarActions"),
-  radarDots: document.getElementById("radarDots"),
-  patrolList: document.getElementById("patrolList"),
-  addCity: document.getElementById("addCity"),
-  profileName: document.getElementById("profileName"),
-  saveProfile: document.getElementById("saveProfile"),
-  loadProfile: document.getElementById("loadProfile"),
-  enemyCityList: document.getElementById("enemyCityList"),
-  attackCooldown: document.getElementById("attackCooldown"),
-  attackCity: document.getElementById("attackCity"),
-  sendPatrol: document.getElementById("sendPatrol")
+  cityList: document.getElementById("cityList"), cityStatus: document.getElementById("cityStatus"), buildingShop: document.getElementById("buildingShop"),
+  unitShop: document.getElementById("unitShop"), missileShop: document.getElementById("missileShop"), missileStock: document.getElementById("missileStock"),
+  budget: document.getElementById("budget"), maintenance: document.getElementById("maintenance"), taxIncome: document.getElementById("taxIncome"),
+  populationTotal: document.getElementById("populationTotal"), gameStatus: document.getElementById("gameStatus"), map: document.getElementById("map"),
+  minimap: document.getElementById("minimap"), eventLog: document.getElementById("eventLog"), radarLog: document.getElementById("radarLog"),
+  radarActions: document.getElementById("radarActions"), radarDots: document.getElementById("radarDots"), patrolList: document.getElementById("patrolList"),
+  vehicleList: document.getElementById("vehicleList"), aircraftPanel: document.getElementById("aircraftPanel"), addCity: document.getElementById("addCity"),
+  recruitSoldiers: document.getElementById("recruitSoldiers"), profileName: document.getElementById("profileName"), saveProfile: document.getElementById("saveProfile"),
+  loadProfile: document.getElementById("loadProfile"), enemyCityList: document.getElementById("enemyCityList"), attackCooldown: document.getElementById("attackCooldown"),
+  attackCity: document.getElementById("attackCity"), sendPatrol: document.getElementById("sendPatrol")
 };
 
+const state = { budget: 10000, maintenance: 0, taxIncome: 0, cities: [], activeCityId: null, patrols: [], events: [], enemiesDetected: [], missions: [], selectedEnemyId: null, selectedEnemyCityId: null, enemyCities: [], attackCooldown: 0, selectedAircraftId: null, selectedScoutAircraftId: null, missileInventory: { a2a: 2, a2g: 1, a2s: 1 } };
 const randomFrom = (list) => list[Math.floor(Math.random() * list.length)];
+const getActiveCity = () => state.cities.find((c) => c.id === state.activeCityId);
+const getSelectedEnemy = () => state.enemiesDetected.find((e) => e.id === state.selectedEnemyId);
+const getSelectedEnemyCity = () => state.enemyCities.find((c) => c.id === state.selectedEnemyCityId);
+const getHangarCapacity = (city) => city.buildings.hangar * 4;
+const getTotalPopulation = () => state.cities.reduce((sum, city) => sum + (city.lost ? 0 : city.population), 0);
 
 const createCity = (name, starter = false) => ({
-  id: crypto.randomUUID(),
-  name,
-  population: 12000 + Math.floor(Math.random() * 7000),
-  morale: 85,
-  income: 450,
-  buildings: {
-    airport: starter,
-    hangar: starter,
-    port: starter,
-    radar: 1,
-    walls: false,
-    missiles: false,
-    antiAir: false
-  },
-  units: {
-    aircraft: [],
-    tanks: [],
-    ships: []
-  },
-  status: "bezpieczne",
-  lost: false
+  id: crypto.randomUUID(), name, population: 13000 + Math.floor(Math.random() * 5000), morale: 85, incomeBase: 460, soldiers: starter ? 220 : 80,
+  buildings: { airport: starter, hangar: starter ? 2 : 1, port: starter, radar: 1, mobileRadar: false, omegaRadar: false, missileSilo: false, antiAir: false, walls: false },
+  units: { aircraft: [], tanks: [], ships: [] }, status: "bezpieczne", lost: false
 });
-
-const createEnemyCity = (name) => ({
-  id: crypto.randomUUID(),
-  name,
-  defense: 120,
-  status: "aktywny"
-});
-
-const getActiveCity = () => state.cities.find((city) => city.id === state.activeCityId);
-const getSelectedEnemy = () => state.enemiesDetected.find((enemy) => enemy.id === state.selectedEnemyId);
-const getSelectedEnemyCity = () => state.enemyCities.find((city) => city.id === state.selectedEnemyCityId);
-const getReadyAircraft = (city) => city.units.aircraft.filter((unit) => unit.status === "gotowy");
+const createEnemyCity = (name) => ({ id: crypto.randomUUID(), name, defense: 120, status: "aktywny" });
 
 const logEvent = (message) => {
-  const timestamp = new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
-  state.events.unshift(`[${timestamp}] ${message}`);
-  state.events = state.events.slice(0, 14);
-  renderLog();
+  const t = new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
+  state.events.unshift(`[${t}] ${message}`); state.events = state.events.slice(0, 20); ui.eventLog.innerHTML = state.events.map((e) => `<div>${e}</div>`).join("");
 };
 
 const renderCities = () => {
   ui.cityList.innerHTML = "";
   state.cities.forEach((city) => {
-    const button = document.createElement("button");
-    button.className = `city-button ${city.id === state.activeCityId ? "active" : ""}`;
-    button.textContent = city.name + (city.lost ? " (utracone)" : "");
-    button.disabled = city.lost;
-    button.addEventListener("click", () => {
-      state.activeCityId = city.id;
-      render();
-    });
-    ui.cityList.appendChild(button);
+    const btn = document.createElement("button");
+    btn.className = `city-button ${city.id === state.activeCityId ? "active" : ""}`;
+    btn.textContent = city.name + (city.lost ? " (utracone)" : "");
+    btn.disabled = city.lost;
+    btn.onclick = () => { state.activeCityId = city.id; render(); };
+    ui.cityList.appendChild(btn);
   });
 };
 
 const renderCityStatus = () => {
-  const city = getActiveCity();
-  if (!city) {
-    ui.cityStatus.textContent = "Brak aktywnego miasta.";
-    return;
-  }
-
-  ui.cityStatus.innerHTML = `
-    <div><strong>${city.name}</strong></div>
-    <div>Populacja: ${city.population}</div>
-    <div>Morale: ${city.morale}%</div>
-    <div>Status: ${city.status}</div>
-    <div>Radar: poziom ${city.buildings.radar}</div>
-    <div class="city-units">
-      <span>✈️ ${city.units.aircraft.length}</span>
-      <span>🛡️ ${city.units.tanks.length}</span>
-      <span>🚢 ${city.units.ships.length}</span>
-    </div>
-    <div class="building-tags">
-      ${Object.entries(city.buildings)
-        .filter(([key, value]) => value && key !== "radar")
-        .map(([key]) => `<span>${key}</span>`)
-        .join(" ")}
-    </div>
-  `;
+  const city = getActiveCity(); if (!city) return;
+  const income = Math.floor((city.incomeBase + city.population / 70 + city.morale * 3) * TAX_RATE);
+  ui.cityStatus.innerHTML = `<div><strong>${city.name}</strong></div><div>Populacja: ${city.population}</div><div>Morale: ${city.morale}%</div><div>Żołnierze: ${city.soldiers}</div><div>Podatek netto: ${income} zł / tura</div><div>Hangary: ${city.units.aircraft.length}/${getHangarCapacity(city)}</div><div>Radar: lvl ${city.buildings.radar}${city.buildings.omegaRadar ? " + OMEGA" : ""}</div>`;
 };
 
 const renderShops = () => {
-  const city = getActiveCity();
-  if (!city) return;
-
+  const city = getActiveCity(); if (!city) return;
   ui.buildingShop.innerHTML = "";
-  buildingCatalog.forEach((building) => {
-    const card = document.createElement("div");
-    card.className = "shop-card";
-    const button = document.createElement("button");
-    button.textContent = `${building.name} (${building.cost})`;
-    button.disabled = building.id !== "radar" && city.buildings[building.id];
-    button.addEventListener("click", () => purchaseBuilding(building));
-    card.innerHTML = `<strong>${building.name}</strong><p>${building.description}</p>`;
-    card.appendChild(button);
-    ui.buildingShop.appendChild(card);
+  buildingCatalog.forEach((b) => {
+    const card = document.createElement("div"); card.className = "shop-card";
+    const btn = document.createElement("button"); btn.textContent = `${b.name} (${b.cost} zł)`;
+    btn.disabled = ["airport", "port", "mobileRadar", "omegaRadar", "missileSilo", "antiAir", "walls"].includes(b.id) && !!city.buildings[b.id];
+    btn.onclick = () => purchaseBuilding(b);
+    card.innerHTML = `<strong>${b.name}</strong><p>${b.description}</p>`; card.appendChild(btn); ui.buildingShop.appendChild(card);
   });
 
   ui.unitShop.innerHTML = "";
-  const addSection = (title) => {
-    const wrapper = document.createElement("div");
-    wrapper.className = "shop-section";
-    wrapper.innerHTML = `<h4>${title}</h4>`;
-    ui.unitShop.appendChild(wrapper);
-    return wrapper;
+  const section = (title, list, type) => {
+    const wrap = document.createElement("div"); wrap.className = "shop-section"; wrap.innerHTML = `<h4>${title}</h4>`;
+    list.forEach((unit) => {
+      const card = document.createElement("div"); card.className = "shop-card";
+      const btn = document.createElement("button"); btn.textContent = `Kup (${unit.cost} zł)`; btn.onclick = () => purchaseUnit(type, unit);
+      card.innerHTML = `<strong>${unit.name}</strong><p>Atak:${unit.attack} | Utrzymanie:${unit.maintenance}</p>`; card.appendChild(btn); wrap.appendChild(card);
+    });
+    ui.unitShop.appendChild(wrap);
   };
+  section("Samoloty (15)", aircraftTypes, "aircraft"); section("Czołgi (10)", tankTypes, "tanks"); section("Flota (10)", shipTypes, "ships");
 
-  const aircraftSection = addSection("Samoloty");
-  aircraftTypes.forEach((unit) => addUnitButton(aircraftSection, "aircraft", unit));
+  ui.missileShop.innerHTML = "";
+  missileTypes.forEach((m) => {
+    const card = document.createElement("div"); card.className = "shop-card";
+    const btn = document.createElement("button"); btn.textContent = `Kup (${m.cost} zł)`; btn.onclick = () => buyMissile(m.id);
+    card.innerHTML = `<strong>${m.name}</strong><p>Moc: ${m.power} | Cel: ${m.use}</p>`; card.appendChild(btn); ui.missileShop.appendChild(card);
+  });
 
-  const tankSection = addSection("Czołgi");
-  tankTypes.forEach((unit) => addUnitButton(tankSection, "tanks", unit));
-
-  const shipSection = addSection("Statki i okręty");
-  shipTypes.forEach((unit) => addUnitButton(shipSection, "ships", unit));
-};
-
-const addUnitButton = (container, type, unit) => {
-  const card = document.createElement("div");
-  card.className = "shop-card";
-  const button = document.createElement("button");
-  button.textContent = `Kup (${unit.cost})`;
-  button.addEventListener("click", () => purchaseUnit(type, unit));
-  card.innerHTML = `<strong>${unit.name}</strong>
-    <p>Atak: ${unit.attack} | Utrzymanie: ${unit.maintenance}</p>`;
-  card.appendChild(button);
-  container.appendChild(card);
+  ui.missileStock.innerHTML = missileTypes.map((m) => `<div class="missile-entry">${m.name}: ${state.missileInventory[m.id] || 0}</div>`).join("");
 };
 
 const renderResources = () => {
-  ui.budget.textContent = state.budget.toFixed(0);
-  ui.maintenance.textContent = state.maintenance.toFixed(0);
+  ui.budget.textContent = state.budget.toFixed(0); ui.maintenance.textContent = state.maintenance.toFixed(0); ui.taxIncome.textContent = state.taxIncome.toFixed(0); ui.populationTotal.textContent = getTotalPopulation().toFixed(0);
 };
 
 const renderMap = () => {
   ui.map.innerHTML = "";
   state.cities.forEach((city) => {
-    const card = document.createElement("div");
-    card.className = `city-card ${city.id === state.activeCityId ? "active" : ""}`;
-    card.innerHTML = `
-      <h4>${city.name}</h4>
-      <p>${city.status}</p>
-      <div class="city-assets">
-        <span>✈️ ${city.units.aircraft.length}</span>
-        <span>🛡️ ${city.units.tanks.length}</span>
-        <span>🚢 ${city.units.ships.length}</span>
-      </div>
-    `;
+    const card = document.createElement("div"); card.className = `city-card ${city.id === state.activeCityId ? "active" : ""}`;
+    card.innerHTML = `<h4>${city.name}</h4><p>${city.status}</p><p>Żołnierze: ${city.soldiers}</p><div class="city-assets"><span>✈️ ${city.units.aircraft.length}</span><span>🛡️ ${city.units.tanks.length}</span><span>🚢 ${city.units.ships.length}</span></div>`;
     ui.map.appendChild(card);
   });
 };
 
-const renderLog = () => {
-  ui.eventLog.innerHTML = state.events.map((event) => `<div>${event}</div>`).join("");
-};
-
 const renderRadar = () => {
   ui.radarLog.innerHTML = "";
-  if (state.enemiesDetected.length === 0) {
-    ui.radarLog.textContent = "Brak wykryć.";
-  }
-  state.enemiesDetected.slice(0, 6).forEach((enemy) => {
-    const button = document.createElement("button");
-    button.className = `radar-entry ${enemy.id === state.selectedEnemyId ? "active" : ""}`;
-    button.textContent = enemy.label;
-    button.addEventListener("click", () => {
-      state.selectedEnemyId = enemy.id;
-      renderRadarActions();
-      renderRadar();
-    });
-    ui.radarLog.appendChild(button);
+  if (!state.enemiesDetected.length) ui.radarLog.textContent = "Brak wykryć.";
+  state.enemiesDetected.slice(0, 8).forEach((enemy) => {
+    const btn = document.createElement("button"); btn.className = `radar-entry ${enemy.id === state.selectedEnemyId ? "active" : ""}`; btn.textContent = enemy.label;
+    btn.onclick = () => { state.selectedEnemyId = enemy.id; renderRadarActions(); renderRadar(); };
+    ui.radarLog.appendChild(btn);
   });
 
   ui.radarDots.innerHTML = "";
-  state.enemiesDetected.slice(0, 8).forEach((enemy) => {
-    const dot = document.createElement("span");
-    dot.className = `radar-dot ${enemy.type}`;
-    dot.style.left = `${enemy.x}%`;
-    dot.style.top = `${enemy.y}%`;
-    ui.radarDots.appendChild(dot);
+  state.enemiesDetected.slice(0, 10).forEach((enemy) => {
+    const dot = document.createElement("span"); dot.className = `radar-dot ${enemy.type}`; dot.style.left = `${enemy.x}%`; dot.style.top = `${enemy.y}%`; ui.radarDots.appendChild(dot);
   });
 };
 
 const renderRadarActions = () => {
-  const selected = getSelectedEnemy();
-  if (!selected) {
-    ui.radarActions.innerHTML = "Wybierz cel na radarze.";
-    return;
-  }
-  const city = getActiveCity();
-  const hasAircraft = city ? getReadyAircraft(city).length > 0 : false;
-  const interceptReady = state.missions.some(
-    (mission) => mission.type === "intercept" && mission.targetId === selected.id && mission.stage === "engage"
-  );
+  const selected = getSelectedEnemy(); const city = getActiveCity();
+  if (!selected || !city) { ui.radarActions.textContent = "Wybierz cel na radarze."; return; }
+
+  const readyAircraft = city.units.aircraft.filter((a) => a.status === "gotowy");
+  const opts = readyAircraft.map((a) => `<option value="${a.id}" ${state.selectedScoutAircraftId === a.id ? "selected" : ""}>${a.name}</option>`).join("");
+
+  const mission = state.missions.find((m) => m.targetId === selected.id && m.stage === "engage");
+  const canRadioBack = !!mission;
   ui.radarActions.innerHTML = `
     <div><strong>Cel:</strong> ${selected.label}</div>
     <div>Status: ${selected.status}</div>
-    <div class="radar-actions">
-      <button id="sendIntercept">Wyślij samolot</button>
-      <button id="fireMissiles">Odpal rakiety</button>
-    </div>
-  `;
-  const sendButton = ui.radarActions.querySelector("#sendIntercept");
-  const fireButton = ui.radarActions.querySelector("#fireMissiles");
-  sendButton.disabled = !hasAircraft;
-  fireButton.disabled = !interceptReady;
-  sendButton.addEventListener("click", () => sendIntercept(selected.id));
-  fireButton.addEventListener("click", () => fireMissiles(selected.id));
+    <label>Samolot zwiadowczy:</label>
+    <select id="scoutSelect" class="select-inline"><option value="">-- wybierz --</option>${opts}</select>
+    <div class="city-actions">
+      <button id="sendScout">Wyślij samolot zwiadowczy</button>
+      <button id="shootByAircraft">Zestrzel samolotem</button>
+      <button id="radioReturn">Nadaj rozkaz zawrotu przez radio</button>
+      <button id="forceShootDown">Odstrzel gdy nie słucha</button>
+    </div>`;
+
+  const scoutSelect = ui.radarActions.querySelector("#scoutSelect");
+  scoutSelect.onchange = (e) => { state.selectedScoutAircraftId = e.target.value || null; };
+  ui.radarActions.querySelector("#sendScout").onclick = () => sendIntercept(selected.id);
+  ui.radarActions.querySelector("#shootByAircraft").onclick = () => dogfightAttack(selected.id);
+  ui.radarActions.querySelector("#radioReturn").onclick = () => commandReturn(selected.id);
+  const forceBtn = ui.radarActions.querySelector("#forceShootDown");
+  forceBtn.disabled = !canRadioBack;
+  forceBtn.onclick = () => forceShootDownMission(selected.id);
 };
 
 const renderEnemyCities = () => {
   ui.enemyCityList.innerHTML = "";
-  if (state.enemyCities.length === 0) {
-    ui.enemyCityList.textContent = "Brak wrogich miast.";
-  }
   state.enemyCities.forEach((city) => {
-    const button = document.createElement("button");
-    button.className = `enemy-city ${city.id === state.selectedEnemyCityId ? "active" : ""}`;
-    button.textContent = `${city.name} (${city.status}) | Obrona: ${city.defense}`;
-    button.disabled = city.status !== "aktywny";
-    button.addEventListener("click", () => {
-      state.selectedEnemyCityId = city.id;
-      renderEnemyCities();
-    });
-    ui.enemyCityList.appendChild(button);
+    const btn = document.createElement("button"); btn.className = `enemy-city ${city.id === state.selectedEnemyCityId ? "active" : ""}`; btn.textContent = `${city.name} (${city.status}) | Obrona: ${Math.floor(city.defense)}`;
+    btn.disabled = city.status !== "aktywny"; btn.onclick = () => { state.selectedEnemyCityId = city.id; renderEnemyCities(); };
+    ui.enemyCityList.appendChild(btn);
   });
   ui.attackCooldown.textContent = state.attackCooldown > 0 ? `${state.attackCooldown}s` : "gotowy";
   ui.attackCity.disabled = state.attackCooldown > 0 || !state.selectedEnemyCityId;
 };
 
 const renderPatrols = () => {
-  ui.patrolList.innerHTML = state.patrols
-    .map((patrol) => `<div>${patrol.unit} patroluje: ${patrol.city}</div>`)
-    .join("") || "Brak aktywnych patroli.";
+  ui.patrolList.innerHTML = state.patrols.map((p) => `<div>${p.unit} patroluje: ${p.city}</div>`).join("") || "Brak aktywnych patroli.";
 };
 
 const renderMinimap = () => {
   ui.minimap.innerHTML = "";
-  state.cities.forEach((city, index) => {
-    const pin = document.createElement("span");
-    pin.className = "minimap-pin";
-    pin.style.left = `${20 + index * 25}%`;
-    pin.style.top = `${30 + (index % 2) * 30}%`;
-    pin.title = city.name;
-    ui.minimap.appendChild(pin);
+  state.cities.forEach((city, i) => {
+    const pin = document.createElement("span"); pin.className = "minimap-pin city"; pin.style.left = `${15 + (i % 4) * 22}%`; pin.style.top = `${18 + Math.floor(i / 4) * 26}%`; pin.title = city.name; ui.minimap.appendChild(pin);
   });
+  state.enemiesDetected.forEach((e) => {
+    const pin = document.createElement("span"); pin.className = "minimap-pin enemy"; pin.style.left = `${e.x}%`; pin.style.top = `${e.y}%`; pin.title = e.label; ui.minimap.appendChild(pin);
+  });
+  state.missions.forEach((m) => {
+    const enemy = state.enemiesDetected.find((e) => e.id === m.targetId);
+    if (!enemy) return;
+    const pin = document.createElement("span"); pin.className = "minimap-pin mission"; pin.style.left = `${enemy.x - 4}%`; pin.style.top = `${enemy.y - 4}%`; pin.title = `Misja: ${m.unitName}`; ui.minimap.appendChild(pin);
+  });
+};
+
+const renderVehicleList = () => {
+  const city = getActiveCity(); if (!city) return;
+  const entries = [];
+  city.units.aircraft.forEach((u) => entries.push({ type: "✈️", unit: u }));
+  city.units.tanks.forEach((u) => entries.push({ type: "🛡️", unit: u }));
+  city.units.ships.forEach((u) => entries.push({ type: "🚢", unit: u }));
+  ui.vehicleList.innerHTML = entries.map(({ type, unit }) => `<div class="vehicle-entry"><button data-aircraft-id="${unit.id}" ${type !== "✈️" ? "disabled" : ""}>${type} ${unit.name}</button> <small>[${unit.status}]</small></div>`).join("") || "Brak pojazdów.";
+  ui.vehicleList.querySelectorAll("button[data-aircraft-id]").forEach((btn) => {
+    btn.onclick = () => { state.selectedAircraftId = btn.dataset.aircraftId; renderAircraftPanel(); };
+  });
+};
+
+const renderAircraftPanel = () => {
+  const city = getActiveCity(); if (!city) return;
+  const aircraft = city.units.aircraft.find((a) => a.id === state.selectedAircraftId);
+  if (!aircraft) { ui.aircraftPanel.textContent = "Kliknij samolot z listy, aby zarządzać uzbrojeniem i ulepszeniami."; return; }
+  const missiles = Object.entries(aircraft.loadout || {}).map(([id, val]) => `${missileTypes.find((m) => m.id === id)?.name}: ${val}`).join("<br>") || "Brak";
+  ui.aircraftPanel.innerHTML = `
+    <div><strong>${aircraft.name}</strong></div>
+    <div>Status: ${aircraft.status}</div>
+    <div>Ulepszenia: Silnik +${aircraft.upgrades.engine || 0}, Radar +${aircraft.upgrades.radar || 0}, Pancerz +${aircraft.upgrades.armor || 0}</div>
+    <div>Załadowane rakiety:<br>${missiles}</div>
+    <div class="city-actions">
+      <button id="loadA2A">Załaduj pow.-pow.</button>
+      <button id="loadA2G">Załaduj pow.-ziemia</button>
+      <button id="loadA2S">Załaduj pow.-woda</button>
+      <button id="upgradeAircraft">Ulepsz samolot (500 zł)</button>
+    </div>`;
+  ui.aircraftPanel.querySelector("#loadA2A").onclick = () => loadMissileOnAircraft(aircraft, "a2a");
+  ui.aircraftPanel.querySelector("#loadA2G").onclick = () => loadMissileOnAircraft(aircraft, "a2g");
+  ui.aircraftPanel.querySelector("#loadA2S").onclick = () => loadMissileOnAircraft(aircraft, "a2s");
+  ui.aircraftPanel.querySelector("#upgradeAircraft").onclick = () => upgradeAircraft(aircraft);
 };
 
 const renderStatus = () => {
-  const lostCities = state.cities.filter((city) => city.lost).length;
-  if (lostCities >= state.cities.length) {
-    ui.gameStatus.textContent = "Przegrana - wszystkie miasta utracone";
-    ui.gameStatus.classList.add("danger");
-  } else {
-    ui.gameStatus.textContent = lostCities ? "Niebezpieczeństwo" : "Stabilny";
-    ui.gameStatus.classList.remove("danger");
-  }
+  const lost = state.cities.filter((c) => c.lost).length;
+  ui.gameStatus.textContent = lost >= state.cities.length ? "Przegrana" : lost ? "Niebezpieczeństwo" : "Stabilny";
+  ui.gameStatus.classList.toggle("danger", lost > 0);
 };
 
-const render = () => {
-  renderCities();
-  renderCityStatus();
-  renderShops();
-  renderResources();
-  renderMap();
-  renderRadar();
-  renderRadarActions();
-  renderPatrols();
-  renderMinimap();
-  renderEnemyCities();
-  renderStatus();
-};
+const render = () => { renderCities(); renderCityStatus(); renderShops(); renderResources(); renderMap(); renderRadar(); renderRadarActions(); renderPatrols(); renderMinimap(); renderEnemyCities(); renderVehicleList(); renderAircraftPanel(); renderStatus(); };
 
 const purchaseBuilding = (building) => {
-  const city = getActiveCity();
-  if (!city) return;
-  if (state.budget < building.cost) {
-    logEvent("Brak środków na budynek.");
-    return;
-  }
+  const city = getActiveCity(); if (!city) return;
+  if (state.budget < building.cost) return logEvent("Brak środków na budynek.");
   state.budget -= building.cost;
-  if (building.id === "radar") {
-    city.buildings.radar += 1;
-  } else {
-    city.buildings[building.id] = true;
-  }
-  logEvent(`W mieście ${city.name} zbudowano: ${building.name}.`);
-  render();
+  if (building.id === "radar") city.buildings.radar += 1;
+  else if (building.id === "hangar") city.buildings.hangar += 1;
+  else city.buildings[building.id] = true;
+  logEvent(`W ${city.name} zbudowano: ${building.name}.`); render();
 };
 
 const purchaseUnit = (type, unit) => {
-  const city = getActiveCity();
-  if (!city) return;
-  if (state.budget < unit.cost) {
-    logEvent("Brak środków na jednostkę.");
-    return;
-  }
-  if (type === "aircraft" && (!city.buildings.airport || !city.buildings.hangar)) {
-    logEvent("Potrzebujesz lotniska i hangaru.");
-    return;
-  }
-  if (type === "ships" && !city.buildings.port) {
-    logEvent("Potrzebujesz portu wojskowego.");
-    return;
-  }
-  state.budget -= unit.cost;
-  city.units[type].push({ ...unit, id: crypto.randomUUID(), status: "gotowy" });
-  logEvent(`Zakupiono ${unit.name} w mieście ${city.name}.`);
-  render();
+  const city = getActiveCity(); if (!city) return;
+  if (state.budget < unit.cost) return logEvent("Brak środków na jednostkę.");
+  if (type === "aircraft" && (!city.buildings.airport || city.units.aircraft.length >= getHangarCapacity(city))) return logEvent("Brakuje lotniska lub miejsca w hangarach.");
+  if (type === "ships" && !city.buildings.port) return logEvent("Potrzebujesz portu wojskowego.");
+  if (city.soldiers < 30) return logEvent("Za mało żołnierzy do obsługi nowej jednostki.");
+  city.soldiers -= 30; state.budget -= unit.cost;
+  city.units[type].push({ ...unit, id: crypto.randomUUID(), status: "gotowy", upgrades: { engine: 0, radar: 0, armor: 0 }, loadout: {} });
+  logEvent(`Zakupiono ${unit.name} w mieście ${city.name}.`); render();
 };
 
-const addCity = () => {
-  const name = `Miasto ${state.cities.length + 1}`;
-  const city = createCity(name);
-  state.cities.push(city);
-  if (!state.activeCityId) state.activeCityId = city.id;
-  logEvent(`Założono nowe miasto: ${name}.`);
-  render();
+const buyMissile = (id) => {
+  const type = missileTypes.find((m) => m.id === id); if (!type) return;
+  if (state.budget < type.cost) return logEvent("Brak środków na rakiety.");
+  state.budget -= type.cost;
+  state.missileInventory[id] = (state.missileInventory[id] || 0) + 1;
+  logEvent(`Kupiono rakietę: ${type.name}.`); render();
+};
+
+const loadMissileOnAircraft = (aircraft, missileId) => {
+  if ((state.missileInventory[missileId] || 0) < 1) return logEvent("Brak tej rakiety w magazynie.");
+  const loaded = Object.values(aircraft.loadout || {}).reduce((a, b) => a + b, 0);
+  if (loaded >= 4) return logEvent("Samolot ma pełny zasobnik (4 rakiety).");
+  state.missileInventory[missileId] -= 1;
+  aircraft.loadout[missileId] = (aircraft.loadout[missileId] || 0) + 1;
+  logEvent(`Załadowano rakietę ${missileId} do ${aircraft.name}.`); render();
+};
+
+const upgradeAircraft = (aircraft) => {
+  if (state.budget < 500) return logEvent("Brak środków na ulepszenie samolotu.");
+  state.budget -= 500;
+  aircraft.attack += 1;
+  aircraft.upgrades.engine += 1;
+  aircraft.upgrades.radar += 1;
+  aircraft.upgrades.armor += 1;
+  logEvent(`Ulepszono ${aircraft.name} (atak/radar/silnik/pancerz +1).`); render();
+};
+
+const recruitSoldiers = () => {
+  const city = getActiveCity(); if (!city) return;
+  if (state.budget < 300) return logEvent("Brak środków na rekrutację.");
+  state.budget -= 300; city.soldiers += 100; city.morale = Math.max(45, city.morale - 2);
+  logEvent(`Zrekrutowano 100 żołnierzy w ${city.name}.`); render();
 };
 
 const startPatrol = () => {
-  const city = getActiveCity();
-  if (!city) return;
-  const aircraft = city.units.aircraft.find((unit) => unit.status === "gotowy");
-  if (!aircraft) {
-    logEvent("Brak wolnych samolotów do patrolu.");
-    return;
-  }
-  aircraft.status = "patrol";
-  state.patrols.push({ unit: aircraft.name, unitId: aircraft.id, city: city.name });
-  logEvent(`Samolot ${aircraft.name} rozpoczął patrol z ${city.name}.`);
-  render();
+  const city = getActiveCity(); if (!city) return;
+  const aircraft = city.units.aircraft.find((u) => u.status === "gotowy");
+  if (!aircraft) return logEvent("Brak wolnych samolotów do patrolu.");
+  aircraft.status = "patrol"; state.patrols.push({ unit: aircraft.name, unitId: aircraft.id, city: city.name });
+  logEvent(`Samolot ${aircraft.name} rozpoczął patrol.`); render();
 };
 
 const sendIntercept = (enemyId) => {
-  const city = getActiveCity();
-  const enemy = state.enemiesDetected.find((item) => item.id === enemyId);
+  const city = getActiveCity(); const enemy = state.enemiesDetected.find((e) => e.id === enemyId);
   if (!city || !enemy) return;
-  const readyAircraft = getReadyAircraft(city);
-  if (readyAircraft.length === 0) {
-    logEvent("Brak wolnych samolotów do przechwycenia.");
-    return;
-  }
-  const aircraft = readyAircraft[0];
+  const aircraft = city.units.aircraft.find((a) => a.id === state.selectedScoutAircraftId && a.status === "gotowy") || city.units.aircraft.find((a) => a.status === "gotowy");
+  if (!aircraft) return logEvent("Brak gotowego samolotu zwiadowczego.");
   aircraft.status = "przechwycenie";
-  state.missions.push({
-    id: crypto.randomUUID(),
-    type: "intercept",
-    unitId: aircraft.id,
-    unitName: aircraft.name,
-    cityId: city.id,
-    targetId: enemyId,
-    eta: 6,
-    stage: "enroute"
-  });
+  state.missions.push({ id: crypto.randomUUID(), type: "intercept", unitId: aircraft.id, unitName: aircraft.name, cityId: city.id, targetId: enemyId, eta: 5, stage: "enroute", obeysRadio: Math.random() > 0.25 });
   enemy.status = "namierzony";
-  logEvent(`Samolot ${aircraft.name} ruszył na przechwycenie wroga przy ${city.name}.`);
-  render();
+  logEvent(`Wysłano ${aircraft.name} do przechwycenia celu.`); render();
 };
 
-const fireMissiles = (enemyId) => {
-  const city = getActiveCity();
-  const enemy = state.enemiesDetected.find((item) => item.id === enemyId);
-  if (!city || !enemy) return;
-  const mission = state.missions.find(
-    (item) => item.type === "intercept" && item.targetId === enemyId && item.stage === "engage"
-  );
-  if (!mission) {
-    logEvent("Najpierw wyślij samolot, aby przechwycić cel.");
-    return;
-  }
-  const successChance = city.buildings.missiles ? 0.75 : 0.6;
-  const success = Math.random() < successChance;
+const dogfightAttack = (enemyId) => {
+  const enemy = state.enemiesDetected.find((e) => e.id === enemyId);
+  const mission = state.missions.find((m) => m.targetId === enemyId);
+  if (!enemy || !mission) return logEvent("Najpierw wyślij samolot do celu.");
+  const city = state.cities.find((c) => c.id === mission.cityId);
+  const aircraft = city?.units.aircraft.find((a) => a.id === mission.unitId);
+  if (!aircraft) return logEvent("Samolot przechwytujący nie istnieje.");
+
+  const a2a = aircraft.loadout.a2a || 0;
+  const bonus = a2a > 0 ? 5 : 0;
+  if (a2a > 0) aircraft.loadout.a2a -= 1;
+  const success = Math.random() < 0.52 + (aircraft.attack + bonus) / 40;
   if (success) {
-    logEvent(`Rakiety zestrzeliły ${enemy.label}.`);
-    state.enemiesDetected = state.enemiesDetected.filter((item) => item.id !== enemyId);
-    if (state.selectedEnemyId === enemyId) {
-      state.selectedEnemyId = null;
-    }
-    mission.stage = "return";
-    mission.eta = 5;
+    logEvent(`Cel ${enemy.label} zestrzelony samolotem ${aircraft.name}.`);
+    state.enemiesDetected = state.enemiesDetected.filter((e) => e.id !== enemyId);
+    mission.stage = "return"; mission.eta = 4;
   } else {
-    logEvent(`Atak rakietowy nieudany. ${mission.unitName} utracony.`);
-    const homeCity = state.cities.find((item) => item.id === mission.cityId);
-    if (homeCity) removeAircraft(homeCity, mission.unitId);
-    state.missions = state.missions.filter((item) => item.id !== mission.id);
+    logEvent(`Atak ${aircraft.name} nieudany.`);
   }
   render();
 };
 
-const removeAircraft = (city, unitId) => {
-  city.units.aircraft = city.units.aircraft.filter((unit) => unit.id !== unitId);
-  state.patrols = state.patrols.filter((patrol) => patrol.unitId !== unitId);
-  state.missions = state.missions.filter((mission) => mission.unitId !== unitId);
+const commandReturn = (enemyId) => {
+  const mission = state.missions.find((m) => m.targetId === enemyId);
+  if (!mission) return logEvent("Brak aktywnej misji dla tego celu.");
+  if (mission.stage !== "engage" && mission.stage !== "enroute") return logEvent("Ten samolot już wraca lub zakończył misję.");
+  if (mission.obeysRadio) {
+    mission.stage = "return"; mission.eta = 3;
+    logEvent(`Pilot ${mission.unitName} wykonał rozkaz zawrotu.`);
+  } else {
+    logEvent(`Pilot ${mission.unitName} NIE wykonał rozkazu. Możesz go odstrzelić.`);
+  }
+  render();
+};
+
+const forceShootDownMission = (enemyId) => {
+  const mission = state.missions.find((m) => m.targetId === enemyId);
+  if (!mission) return logEvent("Brak misji do odstrzelenia.");
+  const city = state.cities.find((c) => c.id === mission.cityId);
+  if (city) city.units.aircraft = city.units.aircraft.filter((a) => a.id !== mission.unitId);
+  state.missions = state.missions.filter((m) => m.id !== mission.id);
+  logEvent(`Awaryjne odstrzelenie własnego samolotu ${mission.unitName}.`);
+  render();
 };
 
 const updateMissions = () => {
-  const remaining = [];
-  state.missions.forEach((mission) => {
-    mission.eta = Math.max(0, mission.eta - 1);
-    if (mission.eta === 0) {
-      if (mission.stage === "enroute") {
-        mission.stage = "engage";
-        logEvent(`Samolot ${mission.unitName} dotarł do celu i czeka na rozkaz.`);
-        remaining.push(mission);
-      } else if (mission.stage === "return") {
-        const city = state.cities.find((item) => item.id === mission.cityId);
-        const aircraft = city?.units.aircraft.find((unit) => unit.id === mission.unitId);
-        if (aircraft) aircraft.status = "gotowy";
-        logEvent(`Samolot ${mission.unitName} wrócił do bazy.`);
-      } else {
-        remaining.push(mission);
-      }
-    } else {
-      remaining.push(mission);
-    }
+  const keep = [];
+  state.missions.forEach((m) => {
+    m.eta = Math.max(0, m.eta - 1);
+    if (m.eta === 0 && m.stage === "enroute") {
+      m.stage = "engage"; logEvent(`Samolot ${m.unitName} osiągnął cel i czeka na decyzję.`); keep.push(m);
+    } else if (m.eta === 0 && m.stage === "return") {
+      const city = state.cities.find((c) => c.id === m.cityId);
+      const aircraft = city?.units.aircraft.find((a) => a.id === m.unitId);
+      if (aircraft) aircraft.status = "gotowy";
+      logEvent(`Samolot ${m.unitName} wrócił do bazy.`);
+    } else keep.push(m);
   });
-  state.missions = remaining;
+  state.missions = keep;
 };
 
 const attackEnemyCity = () => {
-  const city = getActiveCity();
-  const enemyCity = getSelectedEnemyCity();
-  if (!city || !enemyCity) {
-    logEvent("Wybierz cel ofensywy.");
-    return;
-  }
-  if (state.attackCooldown > 0) {
-    logEvent("Atak jest na cooldownie.");
-    return;
-  }
-  const readyAircraft = getReadyAircraft(city);
-  if (readyAircraft.length < 2) {
-    logEvent("Potrzebujesz co najmniej 2 samolotów gotowych do ataku.");
-    return;
-  }
-
-  const strikeGroup = readyAircraft.slice(0, 2);
-  strikeGroup.forEach((unit) => (unit.status = "atak"));
+  const city = getActiveCity(); const enemyCity = getSelectedEnemyCity();
+  if (!city || !enemyCity) return logEvent("Wybierz cel ofensywy.");
+  if (state.attackCooldown > 0) return logEvent("Atak jest na cooldownie.");
+  const ready = city.units.aircraft.filter((a) => a.status === "gotowy");
+  if (ready.length < 2) return logEvent("Potrzebujesz min. 2 samolotów do ataku.");
   state.attackCooldown = 20;
-
-  const attackPower = strikeGroup.reduce((sum, unit) => sum + unit.attack, 0) + Math.floor(Math.random() * 10);
-  const defensePower = enemyCity.defense + Math.floor(Math.random() * 12);
-  const success = attackPower >= defensePower;
-
+  const strike = ready.slice(0, 2);
+  strike.forEach((u) => (u.status = "atak"));
+  const power = strike.reduce((sum, u) => sum + u.attack, 0) + city.soldiers / 80 + (strike.reduce((s, u) => s + (u.loadout.a2g || 0), 0) * 3);
+  const defense = enemyCity.defense + Math.floor(Math.random() * 12);
+  const success = power >= defense;
   if (success) {
-    enemyCity.defense = Math.max(0, enemyCity.defense - attackPower);
+    enemyCity.defense = Math.max(0, enemyCity.defense - power);
     logEvent(`Atak na ${enemyCity.name} zakończony sukcesem.`);
-    if (enemyCity.defense <= 0) {
-      enemyCity.status = "zniszczone";
-      logEvent(`Miasto ${enemyCity.name} zostało zneutralizowane.`);
-    }
-  } else {
-    logEvent(`Atak na ${enemyCity.name} nieudany. Straty w lotnictwie.`);
-  }
-
-  strikeGroup.forEach((unit) => {
-    const lost = Math.random() < (success ? 0.25 : 0.5);
-    if (lost) {
-      removeAircraft(city, unit.id);
-    } else {
-      unit.status = "gotowy";
-    }
-  });
+    if (enemyCity.defense <= 0) { enemyCity.status = "zniszczone"; state.budget += 1600; logEvent(`Zdobyto ${enemyCity.name}. Łup: 1600 zł.`); }
+  } else logEvent(`Atak na ${enemyCity.name} nieudany.`);
+  strike.forEach((u) => (u.status = "gotowy"));
   render();
 };
 
 const calculateMaintenance = () => {
   let total = 0;
   state.cities.forEach((city) => {
-    city.units.aircraft.forEach((unit) => (total += unit.maintenance));
-    city.units.tanks.forEach((unit) => (total += unit.maintenance));
-    city.units.ships.forEach((unit) => (total += unit.maintenance));
+    city.units.aircraft.forEach((u) => (total += u.maintenance)); city.units.tanks.forEach((u) => (total += u.maintenance)); city.units.ships.forEach((u) => (total += u.maintenance)); total += Math.floor(city.soldiers / 120);
   });
   state.maintenance = total;
 };
 
 const tickEconomy = () => {
-  let income = 0;
+  let gross = 0;
   state.cities.forEach((city) => {
-    if (!city.lost) income += city.income;
+    if (city.lost) return;
+    city.population += Math.floor(45 + city.population * 0.003);
+    city.morale = Math.min(100, city.morale + 1);
+    gross += city.incomeBase + city.population / 70 + city.morale * 3;
   });
   calculateMaintenance();
-  state.budget += income - state.maintenance;
-  renderResources();
-};
-
-const enemyAttack = () => {
-  const targetCity = randomFrom(state.cities.filter((city) => !city.lost));
-  if (!targetCity) return;
-
-  const attackType = randomFrom(["air", "land", "sea"]);
-  const enemyUnit =
-    attackType === "air" ? randomFrom(aircraftTypes) : attackType === "land" ? randomFrom(tankTypes) : randomFrom(shipTypes);
-
-  const detected = attackType !== "air" || !enemyUnit.stealth || targetCity.buildings.radar >= 2;
-
-  if (detected) {
-    state.enemiesDetected.unshift({
-      id: crypto.randomUUID(),
-      label: `Wykryto ${enemyUnit.name} w pobliżu ${targetCity.name}.`,
-      type: attackType,
-      status: "wykryty",
-      x: Math.floor(Math.random() * 80) + 10,
-      y: Math.floor(Math.random() * 80) + 10
-    });
-  }
-
-  const defensePower =
-    targetCity.units.tanks.length +
-    targetCity.units.ships.length +
-    targetCity.units.aircraft.length +
-    (targetCity.buildings.missiles ? 3 : 0) +
-    (targetCity.buildings.antiAir ? 2 : 0) +
-    (targetCity.buildings.walls ? 2 : 0);
-
-  const attackPower = enemyUnit.attack + Math.floor(Math.random() * 4);
-
-  if (defensePower >= attackPower) {
-    logEvent(`Atak na ${targetCity.name} odparty (${enemyUnit.name}).`);
-    targetCity.morale = Math.max(50, targetCity.morale - 4);
-  } else {
-    targetCity.status = "pod ostrzałem";
-    targetCity.morale = Math.max(0, targetCity.morale - 15);
-    logEvent(`Miasto ${targetCity.name} zostało trafione przez ${enemyUnit.name}!`);
-
-    if (targetCity.morale <= 10) {
-      targetCity.lost = true;
-      targetCity.status = "utracone";
-      logEvent(`Miasto ${targetCity.name} zostało utracone.`);
-    }
-  }
-
-  state.enemiesDetected = state.enemiesDetected.slice(0, 10);
+  state.taxIncome = gross * TAX_RATE;
+  state.budget += state.taxIncome - state.maintenance;
   render();
 };
 
+const tryDetect = (city, enemyUnit) => {
+  const radarPower = city.buildings.radar + (city.buildings.mobileRadar ? 1 : 0);
+  if (city.buildings.omegaRadar) return true;
+  if (!enemyUnit.stealth) return Math.random() < Math.min(0.9, 0.35 + radarPower * 0.2);
+  return Math.random() < Math.max(0.08, radarPower * 0.08);
+};
+
+const enemyAttack = () => {
+  const target = randomFrom(state.cities.filter((c) => !c.lost)); if (!target) return;
+  const type = randomFrom(["air", "land", "sea", "air", "air"]);
+  const enemyUnit = type === "air" ? randomFrom(aircraftTypes) : type === "land" ? randomFrom(tankTypes) : randomFrom(shipTypes);
+  if (tryDetect(target, enemyUnit)) state.enemiesDetected.unshift({ id: crypto.randomUUID(), label: `${enemyUnit.name} -> ${target.name}`, type, status: "wykryty", x: Math.floor(Math.random() * 80) + 10, y: Math.floor(Math.random() * 80) + 10 });
+
+  const defense = target.soldiers / 80 + target.units.tanks.length + target.units.ships.length + target.units.aircraft.length + (target.buildings.missileSilo ? 4 : 0) + (target.buildings.antiAir ? 2 : 0) + (target.buildings.walls ? 2 : 0);
+  const attack = enemyUnit.attack + Math.floor(Math.random() * 5);
+  if (defense >= attack) { logEvent(`Atak ${type} na ${target.name} odparty (${enemyUnit.name}).`); target.morale = Math.max(50, target.morale - 3); }
+  else {
+    target.status = "pod ostrzałem"; target.morale = Math.max(0, target.morale - 14); target.population = Math.max(0, target.population - Math.floor(80 + Math.random() * 140));
+    logEvent(`Miasto ${target.name} trafione przez ${enemyUnit.name}.`);
+    if (target.morale <= 10) { target.lost = true; target.status = "utracone"; logEvent(`Miasto ${target.name} zostało utracone.`); }
+  }
+  state.enemiesDetected = state.enemiesDetected.slice(0, 12);
+  render();
+};
+
+const addCity = () => { const city = createCity(`Miasto ${state.cities.length + 1}`); state.cities.push(city); if (!state.activeCityId) state.activeCityId = city.id; logEvent(`Założono nowe miasto: ${city.name}.`); render(); };
+
 const setupControls = () => {
-  ui.addCity.addEventListener("click", addCity);
-  ui.sendPatrol.addEventListener("click", startPatrol);
-  ui.attackCity.addEventListener("click", attackEnemyCity);
-
-  ui.saveProfile.addEventListener("click", () => {
-    const name = ui.profileName.value.trim();
-    if (!name) {
-      logEvent("Podaj nazwę profilu.");
-      return;
-    }
-    localStorage.setItem(`${PROFILE_KEY}-${name}`, JSON.stringify(state));
-    logEvent("Postęp zapisany.");
-  });
-
-  ui.loadProfile.addEventListener("click", () => {
-    const name = ui.profileName.value.trim();
-    if (!name) {
-      logEvent("Podaj nazwę profilu.");
-      return;
-    }
-    const saved = localStorage.getItem(`${PROFILE_KEY}-${name}`);
-    if (!saved) {
-      logEvent("Brak zapisanego profilu.");
-      return;
-    }
-    const parsed = JSON.parse(saved);
-    Object.assign(state, parsed);
-    state.events = parsed.events || [];
-    state.patrols = parsed.patrols || [];
-    state.enemiesDetected = parsed.enemiesDetected || [];
-    state.missions = parsed.missions || [];
-    state.enemyCities = parsed.enemyCities || [];
-    state.attackCooldown = parsed.attackCooldown || 0;
-    state.selectedEnemyId = null;
-    state.selectedEnemyCityId = null;
-    render();
-    logEvent("Profil wczytany.");
-  });
+  ui.addCity.onclick = addCity; ui.recruitSoldiers.onclick = recruitSoldiers; ui.sendPatrol.onclick = startPatrol; ui.attackCity.onclick = attackEnemyCity;
+  ui.saveProfile.onclick = () => { const name = ui.profileName.value.trim(); if (!name) return logEvent("Podaj nazwę profilu."); localStorage.setItem(`${PROFILE_KEY}-${name}`, JSON.stringify(state)); logEvent("Postęp zapisany."); };
+  ui.loadProfile.onclick = () => {
+    const name = ui.profileName.value.trim(); if (!name) return logEvent("Podaj nazwę profilu.");
+    const saved = localStorage.getItem(`${PROFILE_KEY}-${name}`); if (!saved) return logEvent("Brak zapisanego profilu.");
+    Object.assign(state, JSON.parse(saved)); state.selectedEnemyId = null; state.selectedEnemyCityId = null;
+    logEvent("Profil wczytany."); render();
+  };
 };
 
 const init = () => {
   state.cities = [createCity("Neo-Warszawa", true)];
   state.enemyCities = [createEnemyCity("Sektor Północny"), createEnemyCity("Twierdza Omega"), createEnemyCity("Port Cienia")];
   state.activeCityId = state.cities[0].id;
-  logEvent("Rozpoczęto kampanię. Boty szykują naloty!");
-  setupControls();
-  render();
-
-  setInterval(() => {
-    updateMissions();
-    if (state.attackCooldown > 0) state.attackCooldown -= 1;
-    renderEnemyCities();
-    renderRadarActions();
-  }, 1000);
+  logEvent("Start kampanii: budżet 10 000 zł, podatki 40%, rozwój populacji i taktyczna mini-mapa.");
+  setupControls(); render();
+  setInterval(() => { updateMissions(); if (state.attackCooldown > 0) state.attackCooldown -= 1; render(); }, 1000);
   setInterval(tickEconomy, 5000);
-  setInterval(enemyAttack, 15000);
+  setInterval(enemyAttack, 14000);
 };
 
 init();
